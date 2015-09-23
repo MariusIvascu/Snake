@@ -1,18 +1,36 @@
-const crypto = require('crypto'),
-    fs = require("fs"),
-    http = require("http");
+var https = require('https');
+var fs = require('fs');
 
-var privateKey = fs.readFileSync('privatekey.pem').toString();
-var certificate = fs.readFileSync('certificate.pem').toString();
-
-var credentials = crypto.createCredentials({key: privateKey, cert: certificate});
-
-var handler = function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end('Hello World\n');
+var options = {
+    key: fs.readFileSync('key.pem'),
+    cert: fs.readFileSync('cert.pem')
 };
 
-var server = http.createServer();
-server.setSecure(credentials);
-server.addListener("request", handler);
-server.listen(8080);
+https.createServer(options, function (req, res) {
+    console.log('request starting...');
+
+    fs.readFile('./index.html', function(error, content) {
+        if (error) {
+            res.writeHead(500);
+            res.end("404 Page Not Found");
+        }
+        else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(content, 'utf-8');
+        }
+    });
+}).listen(8000);
+var http;
+http = require('http');
+http.createServer(function (req, res) {
+    fs.readFile('./index.html', function(error, content) {
+        if (error) {
+            res.writeHead(500);
+            res.end("404 Page Not Found");
+        }
+        else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(content, 'utf-8');
+        }
+    });
+}).listen(8888);
