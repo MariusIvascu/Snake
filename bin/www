@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+var fs = require('fs');
+var app = require('../app');
+var debug = require('debug')('snake:server');
+var http = require('http');
+var https = require('https');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+
+/**
+ * Option for HTTPS
+ */
+
+var options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app).listen(8888);
+
+/**
+ * create HTTPS server
+ */
+var server1 = https.createServer(options,app).listen(8000);
+
+
