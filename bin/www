@@ -10,14 +10,8 @@ var http = require('http');
 var https = require('https');
 
 /**
- * Get port from environment and store in Express.
- */
-
-
-/**
  * Option for HTTPS
  */
-
 var options = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('cert.pem')
@@ -26,7 +20,6 @@ var options = {
 /**
  * Create HTTP server.
  */
-
 var server = http.createServer(app).listen(8888);
 
 /**
@@ -34,4 +27,12 @@ var server = http.createServer(app).listen(8888);
  */
 var server1 = https.createServer(options,app).listen(8000);
 
-
+var WebSocketServer = require('ws').Server
+    , wss = new WebSocketServer({server: server1});
+console.log("websocket server created")
+wss.on('connection', function(ws) {
+  ws.on('message', function(message) {
+    console.log('received: %s', message);
+  });
+  ws.send('something');
+});
