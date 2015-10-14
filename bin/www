@@ -27,12 +27,49 @@ var server = http.createServer(app).listen(8888);
  */
 var server1 = https.createServer(options,app).listen(8000);
 
+var clients = [];
 var WebSocketServer = require('ws').Server
     , wss = new WebSocketServer({server: server1});
-console.log("websocket server created")
+console.log("websocket server created");
 wss.on('connection', function(ws) {
   ws.on('message', function(message) {
     console.log('received: %s', message);
+    clients.push(ws);
   });
-  ws.send('something');
+//  dans les commentaires est le serveur contrôle
+//  var directionDown = [0,1];
+//  var directionUp = [0,-1];
+//  var directionLeft = [-1,0];
+//  var directionRight = [1,0];
+//  var position = [0,0];
+//  var i=0;
+//
+//    setInterval(function () {
+//      {
+//
+//        console.log(i);
+//        if (i % 4 == 0) {
+//          position[0] += directionDown[0] * 200;
+//          position[1] += directionDown[1] * 200;
+//        }
+//        if (i % 4 == 1) {
+//          position[0] += directionRight[0] * 200;
+//          position[1] += directionRight[1] * 200;
+//        }
+//        if (i % 4 == 2) {
+//          position[0] += directionUp[0] * 200;
+//          position[1] += directionUp[1] * 200;
+//        }
+//        if (i % 4 == 3) {
+//          position[0] += directionLeft[0] * 200;
+//          position[1] += directionLeft[1] * 200;
+//        }
+//        i++;
+//      }
+//      ws.send(JSON.stringify({x:position[0],y:position[1]}))
+//    }, 2500);
 });
+wss.broadcast = function(data) {
+  for (var i in this.clients)
+    this.clients[i].send(data);
+};
