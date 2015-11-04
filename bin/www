@@ -33,7 +33,7 @@ var players = [];
 var count = 0;
 
 // Broadcast global
-var delay = 100; // 2000 = 2s - Debug value
+var delay = 50;
 
 // Envoi de allSnakes tous les 'delay' secondes
 setInterval(broadcast, delay);
