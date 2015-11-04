@@ -1,11 +1,9 @@
-#!/usr/bin/env node
-
 /**
  * Module dependencies.
  */
 var fs = require('fs');
 var app = require('../app');
-var debug = require('debug')('snake:server');
+//var debug = require('debug')('snake:server');
 var http = require('http');
 var https = require('https');
 
@@ -20,56 +18,93 @@ var options = {
 /**
  * Create HTTP server.
  */
-var server = http.createServer(app).listen(8888);
+var serverHttp = http.createServer(app).listen(8888);
 
 /**
  * create HTTPS server
  */
-var server1 = https.createServer(options,app).listen(8000);
+var serverHttps = https.createServer(options,app).listen(8000);
 
-var clients = [];
-var WebSocketServer = require('ws').Server
-    , wss = new WebSocketServer({server: server1});
-console.log("websocket server created");
+var WebSocketServer = require('ws').Server,
+    wss = new WebSocketServer({server: serverHttps});
+
+//Tableau contenant tous les joueurs
+var players = [];
+var count = 0;
+
+// Broadcast global
+var delay = 100; // 2000 = 2s - Debug value
+
+// Envoi de allSnakes tous les 'delay' secondes
+setInterval(broadcast, delay);
+
+var model = require("../public/javascripts/snake");
+var allSnakes = new model.allSnakes();
+
+var message = [];
+
+// Envoie un message ? tous les players
+function broadcast() {
+  if(players.length != 0)
+  {
+    console.log("Broadcasting to " + count + " player(s)");
+    allSnakes.update();
+    // Pour chaque player
+    for ( var i = 0; i < count; i++ )
+    {
+      // Si le socket player n'est pas ouvert
+      if(players[i].readyState != 1)
+      {
+        console.log("Socket non ouvert : " + players[i].readyState)
+      }
+      else
+      {
+        message[0] = "game";
+        message[1] = allSnakes.snakes;
+        players[i].send(JSON.stringify(message));  // On envoie data ? chaque player
+      }
+    }
+  }
+}
+
+function init(player,id) {
+
+  message[0] = "init";
+  message[1] = id;
+  player.send(JSON.stringify(message));
+}
+
 wss.on('connection', function(ws) {
+
+  var id = count;
+  var msg;
+  console.log("Nouvelle connection");
+  players[count] = ws;
+  count++;
+  init(ws,id);
+  allSnakes.addSnake(id);
+
   ws.on('message', function(message) {
-    console.log('received: %s', message);
-    clients.push(ws);
+    msg = JSON.parse(message);
+    if(msg[0] >= 0) {
+      allSnakes.directions[msg[0]] = msg[1];
+      console.log(allSnakes.directions[0]);
+    }
+    else {
+      console.error("DEBUG error : ID not set : " + msg[0]);
+    }
   });
-//  dans les commentaires est le serveur contrôle
-//  var directionDown = [0,1];
-//  var directionUp = [0,-1];
-//  var directionLeft = [-1,0];
-//  var directionRight = [1,0];
-//  var position = [0,0];
-//  var i=0;
-//
-//    setInterval(function () {
-//      {
-//
-//        console.log(i);
-//        if (i % 4 == 0) {
-//          position[0] += directionDown[0] * 200;
-//          position[1] += directionDown[1] * 200;
-//        }
-//        if (i % 4 == 1) {
-//          position[0] += directionRight[0] * 200;
-//          position[1] += directionRight[1] * 200;
-//        }
-//        if (i % 4 == 2) {
-//          position[0] += directionUp[0] * 200;
-//          position[1] += directionUp[1] * 200;
-//        }
-//        if (i % 4 == 3) {
-//          position[0] += directionLeft[0] * 200;
-//          position[1] += directionLeft[1] * 200;
-//        }
-//        i++;
-//      }
-//      ws.send(JSON.stringify({x:position[0],y:position[1]}))
-//    }, 2500);
+
+  ws.on('close', function close(ws) {
+    console.log("Déconnexion de " + ws);
+    var indexDC = 0;
+    console.log("Index removed : " + indexDC);
+    players.splice(indexDC,1);
+    count--;
+    console.log('Disconnection : ' + count + ' players left');
+  });
+
+  ws.on('error', function() {
+    console.log('ERROR');
+  });
 });
-wss.broadcast = function(data) {
-  for (var i in this.clients)
-    this.clients[i].send(data);
-};
