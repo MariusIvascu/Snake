@@ -1,4 +1,4 @@
-
+#Snake
 Snakes is a very simple game, written server-side in Node.JS, that uses Paper.JS on the client.
 The scope of the game is to survive for as long as possible, without hitting any of the other players.
 
