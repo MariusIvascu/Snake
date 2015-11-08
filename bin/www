@@ -31,6 +31,7 @@ var WebSocketServer = require('ws').Server,
 //Tableau contenant tous les joueurs
 var players = [];
 var count = 0;
+var playerId = 0;
 
 // Broadcast global
 var delay = 50;
@@ -50,7 +51,7 @@ function broadcast() {
     console.log("Broadcasting to " + count + " player(s)");
     allSnakes.update();
     // Pour chaque player
-    for ( var i = 0; i < count; i++ )
+    for ( var i = 0; i < players.length; i++ )
     {
       // Si le socket player n'est pas ouvert
       if(players[i].readyState != 1)
@@ -68,19 +69,26 @@ function broadcast() {
 }
 
 function init(player,id) {
-
   message[0] = "init";
   message[1] = id;
   player.send(JSON.stringify(message));
 }
-
+function clientDisconnected(id) {
+  "use strict";
+  allSnakes.removeSnake(id);
+  wss.clients.forEach(function(x) {
+    message[0] = "CLEAR_CANVAS";
+    message[1] = allSnakes.snakes;
+    x.send(JSON.stringify(message));
+  });
+}
 wss.on('connection', function(ws) {
-
-  var id = count;
+  var id = playerId;
   var msg;
   console.log("Nouvelle connection");
-  players[count] = ws;
+  players[playerId] = ws;
   count++;
+  playerId++;
   init(ws,id);
   allSnakes.addSnake(id);
 
@@ -95,16 +103,15 @@ wss.on('connection', function(ws) {
     }
   });
 
-  ws.on('close', function close(ws) {
-    console.log("Déconnexion de " + ws);
-    var indexDC = 0;
-    console.log("Index removed : " + indexDC);
-    players.splice(indexDC,1);
-    count--;
-    console.log('Disconnection : ' + count + ' players left');
+
+  //todo some changing on disconection for erase the snake(player)
+  ws.on('close', function () {
+      clientDisconnected(ws.id);
+      count--;
   });
 
   ws.on('error', function() {
+    clientDisconnected(ws.id);
     console.log('ERROR');
   });
 });

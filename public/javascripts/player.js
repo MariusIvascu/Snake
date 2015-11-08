@@ -12,6 +12,7 @@ var tMess;
 var vector;
 var mousePoint;
 var currentPoint;
+var clearCanvas = false;
 var tab =[];
 
 function onMouseDown(event) {
@@ -33,14 +34,11 @@ var i,j;
 var circle;
 var currentSnake;
 var message;
-var previousCircles = [];
 
 // Ici, on reçoit le broadcast du serveur
 ws.onmessage = function(msg) {
 
     message = JSON.parse(msg.data);
-    console.log("Message reçu");
-
     tMess = message[0];
 
     if(tMess === "init")
@@ -55,15 +53,12 @@ ws.onmessage = function(msg) {
     else if(tMess === "game")
     {
         allSnakesPlayer.snakes = message[1];
-
         project.activeLayer.removeChildren();
-
         if(allSnakesPlayer.snakes.length != 0)
         {
             for(i = 0;i < allSnakesPlayer.snakes.length;i++)
             {
                 currentSnake = allSnakesPlayer.snakes[i];
-
                 circle = new Path.Circle({
                     center : [currentSnake.body[0].center.x,currentSnake.body[0].center.y],
                     radius : SNAKE_CAP,
@@ -71,7 +66,6 @@ ws.onmessage = function(msg) {
                 });
 
                 for(j = 1; j < currentSnake.body.length;j++) {
-
                     circle = new Path.Circle({
                         center : [currentSnake.body[j].center.x,currentSnake.body[j].center.y],
                         radius : SNAKE_RADIOUS,
@@ -81,8 +75,15 @@ ws.onmessage = function(msg) {
             }
         }
         else { console.log("allSnakesPlayer est vide");}
-
         view.update();
     }
+    else if(tMess === "CLEAR_CANVAS") {
+        clearCanvas=true;
+    }
+}
 
+function onFrame() {
+    if (clearCanvas) {
+        project.clear();
+    }
 }
