@@ -10,7 +10,6 @@ Before using this code, make sure that you have Node.JS and the following Node.J
 - express
 - paper
 - ws
-- tape (tests)
 
 To install any of them, simply use npm:  __npm install *moduleName*__
 
